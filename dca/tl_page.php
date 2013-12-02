@@ -40,6 +40,7 @@ $GLOBALS['TL_DCA']['tl_page']['fields']['pageImage'] = array
 	'inputType'		=> 'fileTree',
 	'exclude'		=> true,
 	'eval'			=> array('fieldType'=>'radio', 'files'=>true, 'filesOnly'=>true, 'extensions'=>'jpg,jpeg,gif,png'),
+	'sql'			=> "binary(16) NULL"
 );
 
 $GLOBALS['TL_DCA']['tl_page']['fields']['pageImageJumpTo'] = array
@@ -48,6 +49,7 @@ $GLOBALS['TL_DCA']['tl_page']['fields']['pageImageJumpTo'] = array
 	'inputType'		=> 'pageTree',
 	'exclude'		=> true,
 	'eval'			=> array('fieldType'=>'radio'),
+	'sql'			=> "varchar(255) NOT NULL default ''"
 );
 
 $GLOBALS['TL_DCA']['tl_page']['fields']['pageImageAlt'] = array
@@ -56,6 +58,7 @@ $GLOBALS['TL_DCA']['tl_page']['fields']['pageImageAlt'] = array
 	'inputType'		=> 'text',
 	'exclude'		=> true,
 	'eval'			=> array('maxlength'=>255, 'tl_class'=>'w50'),
+	'sql'			=> "varchar(255) NOT NULL default ''"
 );
 
 $GLOBALS['TL_DCA']['tl_page']['fields']['pageImageTitle'] = array
@@ -64,5 +67,6 @@ $GLOBALS['TL_DCA']['tl_page']['fields']['pageImageTitle'] = array
 	'inputType'		=> 'text',
 	'exclude'		=> true,
 	'eval'			=> array('maxlength'=>255, 'tl_class'=>'w50'),
+	'sql'			=> "varchar(255) NOT NULL default ''"
 );
 
