@@ -60,7 +60,7 @@ class ModulePageImage extends Module
 			$strPath = $objPage->pageImage;
 
 			// Contao 3 mode
-			if (is_numeric($objPage->pageImage))
+			if (is_numeric($objPage->pageImage) || \Validator::isUuid($objPage->pageImage))
 			{
 				$objImage = \FilesModel::findByPk($objPage->pageImage);
 
@@ -105,7 +105,7 @@ class ModulePageImage extends Module
 					$strPath = $objTrail->pageImage;
 
 					// Contao 3 mode
-					if (is_numeric($objTrail->pageImage))
+					if (is_numeric($objTrail->pageImage) || \Validator::isUuid($objTrail->pageImage))
 					{
 						$objImage = \FilesModel::findByPk($objTrail->pageImage);
 
