@@ -47,6 +47,47 @@ class ModulePageImage extends Module
 		return $strBuffer;
 	}
 
+    protected function setImageVars($objPage, $arrSize)
+    {
+        $strPath = $objPage->pageImage;
+
+        // Contao 3 mode
+        if (is_numeric($objPage->pageImage) || \Validator::isUuid($objPage->pageImage))
+        {
+            $objImage = \FilesModel::findByPk($objPage->pageImage);
+
+            if ($objImage !== null)
+            {
+                $strPath = $objImage->path;
+            }
+        }
+
+        $strImage = $this->getImage($strPath, $arrSize[0], $arrSize[1], $arrSize[2]);
+        if( is_null($strImage) ) return false;
+
+        $this->Template->src = $strImage;
+        $this->Template->alt = $objPage->pageImageAlt;
+
+        if (($imgSize = @getimagesize(TL_ROOT . '/' . $strImage)) !== false)
+        {
+            $this->Template->size = ' ' . $imgSize[3];
+        }
+
+        if ($objPage->pageImageJumpTo)
+        {
+            $objJumpTo = $this->Database->prepare("SELECT * FROM tl_page WHERE id=?")->limit(1)->execute($objPage->pageImageJumpTo);
+
+            if ($objJumpTo->numRows)
+            {
+                $this->Template->hasLink = true;
+                $this->Template->title = $objPage->pageImageTitle ? $objPage->pageImageTitle : ($objJumpTo->pageTitle ? $objJumpTo->pageTitle : $objJumpTo->title);
+                $this->Template->href = $this->generateFrontendUrl(array('id'=>$objJumpTo->id, 'alias'=>$objJumpTo->alias));
+            }
+        }
+
+        return true;
+    }
+
 
 	protected function compile()
 	{
@@ -55,90 +96,21 @@ class ModulePageImage extends Module
 		$arrSize = deserialize($this->imgSize);
 
 		// Current page has an image
-		if ($objPage->pageImage)
+		if ($objPage->pageImage && $this->setImageVars($objPage, $arrSize))
 		{
-			$strPath = $objPage->pageImage;
-
-			// Contao 3 mode
-			if (is_numeric($objPage->pageImage) || \Validator::isUuid($objPage->pageImage))
-			{
-				$objImage = \FilesModel::findByPk($objPage->pageImage);
-
-				if ($objImage !== null)
-				{
-					$strPath = $objImage->path;
-				}
-			}
-
-			$strImage = $this->getImage($strPath, $arrSize[0], $arrSize[1], $arrSize[2]);
-
-			$this->Template->src = $strImage;
-			$this->Template->alt = $objPage->pageImageAlt;
-
-			if (($imgSize = @getimagesize(TL_ROOT . '/' . $strImage)) !== false)
-			{
-				$this->Template->size = ' ' . $imgSize[3];
-			}
-
-			if ($objPage->pageImageJumpTo)
-			{
-				$objJumpTo = $this->Database->prepare("SELECT * FROM tl_page WHERE id=?")->limit(1)->execute($objPage->pageImageJumpTo);
-
-				if ($objJumpTo->numRows)
-				{
-					$this->Template->hasLink = true;
-					$this->Template->title = $objPage->pageImageTitle ? $objPage->pageImageTitle : ($objJumpTo->pageTitle ? $objJumpTo->pageTitle : $objJumpTo->title);
-					$this->Template->href = $this->generateFrontendUrl(array('id'=>$objJumpTo->id, 'alias'=>$objJumpTo->alias));
-				}
-			}
+			return;
 		}
-
-		// Walk the trail
-		elseif ($this->inheritPageImage && count($objPage->trail))
+        // Walk the trail
+		elseif ( $this->inheritPageImage && count($objPage->trail))
 		{
-			$objTrail = $this->Database->execute("SELECT * FROM tl_page WHERE id IN (" . implode(',', $objPage->trail) . ") ORDER BY id=" . implode(' DESC, id=', array_reverse($objPage->trail)) . " DESC");
+            $objTrail = $this->Database->execute("SELECT * FROM tl_page WHERE id IN (" . implode(',', $objPage->trail) . ") ORDER BY id=" . implode(' DESC, id=', array_reverse($objPage->trail)) . " DESC");
 
 			while( $objTrail->next() )
 			{
-				if ($objTrail->pageImage)
-				{
-					$strPath = $objTrail->pageImage;
-
-					// Contao 3 mode
-					if (is_numeric($objTrail->pageImage) || \Validator::isUuid($objTrail->pageImage))
-					{
-						$objImage = \FilesModel::findByPk($objTrail->pageImage);
-
-						if ($objImage !== null)
-						{
-							$strPath = $objImage->path;
-						}
-					}
-
-					$strImage = $this->getImage($strPath, $arrSize[0], $arrSize[1], $arrSize[2]);
-
-					$this->Template->src = $strImage;
-					$this->Template->alt = $objTrail->pageImageAlt;
-
-					if (($imgSize = @getimagesize(TL_ROOT . '/' . $strImage)) !== false)
-					{
-						$this->Template->size = ' ' . $imgSize[3];
-					}
-
-					if ($objTrail->pageImageJumpTo)
-					{
-						$objJumpTo = $this->Database->prepare("SELECT * FROM tl_page WHERE id=?")->limit(1)->execute($objTrail->pageImageJumpTo);
-
-						if ($objJumpTo->numRows)
-						{
-							$this->Template->hasLink = true;
-							$this->Template->title = $objTrail->pageImageTitle ? $objTrail->pageImageTitle : ($objJumpTo->pageTitle ? $objJumpTo->pageTitle : $objJumpTo->title);
-							$this->Template->href = $this->generateFrontendUrl($objJumpTo->row());
-						}
-					}
-
-					return;
-				}
+                if( $this->setImageVars($objTrail, $arrSize) )
+                {
+                    return;
+                }
 			}
 		}
 	}
